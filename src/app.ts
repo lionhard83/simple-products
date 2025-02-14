@@ -1,50 +1,125 @@
 import express from "express";
 import { products } from "./products";
+import { posts } from "./data/allPosts";
+import { comments } from "./data/comments";
+import { albums } from "./data/albums";
+import { photos } from "./data/photos";
+
 const app = express();
-const users = [
-  { id: 1, name: "Carlo" },
-  { id: 2, name: "Mario" },
-];
-// request
-// response
-// users?name=Car
-app.get("/users", (req, res) => {
-  console.log(req.query);
-  res.json(users);
+app.use(express.json());
+
+app.get("/status", (req, res) => {
+  res.json({ message: "Server is running" });
 });
 
-app.get("/users/:id", (req, res) => {
-  const id = req.params.id;
-  const user = users.find((item) => String(item.id) === id);
-  res.json(user);
-});
-
-app.get("/products", (req, res) => {
-  const query = req.query;
-  let copyProducts = [...products];
-  if (query.typology !== undefined) {
-    copyProducts = copyProducts.filter(
-      (item) =>
-        item.typology.toLowerCase() === (query.typology as string).toLowerCase()
+app.get("/posts", (req, res) => {
+  let copyPosts = [...posts];
+  if (req.query.userId) {
+    copyPosts = copyPosts.filter(
+      (item) => String(item.userId) === req.query.userId
     );
   }
-  if (query.q) {
-    copyProducts = copyProducts.filter(
+  if (req.query.q) {
+    copyPosts = copyPosts.filter(
       (item) =>
-        item.name.toLowerCase().includes((query.q as string).toLowerCase()) ||
-        item.description
-          .toLowerCase()
-          .includes((query.q as string).toLowerCase())
+        item.body.includes(req.query.q as string) ||
+        item.title.includes(req.query.q as string)
     );
   }
-  res.json(copyProducts);
+
+  res.json(copyPosts);
 });
 
-app.get("/products/:id", (req, res) => {
-  const product = products.find((item) => String(item.id) === req.params.id);
-  if (product) {
-    res.json(product);
-  } else res.status(404).json({ message: "product not found" });
+app.get("/posts/:id", (req, res) => {
+  const post = posts.find((item) => String(item.id) === req.params.id);
+  post ? res.json(post) : res.status(400).json({ message: "post not found" });
 });
 
-app.listen(3000);
+app.post("/posts", (req, res) => {
+  if (req.body.userId && req.body.title && req.body.body) {
+    const array = posts.map((item) => item.id);
+    const newId = Math.max(...array) + 1;
+
+    const newPost = {
+      title: req.body.title,
+      body: req.body.body,
+      userId: req.body.userId,
+      id: newId,
+    };
+    posts.push(newPost);
+    res.status(201).json(newPost);
+  } else {
+    res.status(400).json({ message: "missing fields in body" });
+  }
+});
+
+app.put("/posts/:id", (req, res) => {
+  const post = posts.find((item) => String(item.id) === req.params.id);
+  if (post) {
+    if (req.body.userId && req.body.title && req.body.body) {
+      post.body = req.body.body;
+      post.title = req.body.title;
+      post.userId = req.body.userId;
+      res.json(post);
+    } else {
+      res.status(400).json({ message: "missing fields" });
+    }
+  } else {
+    res.status(404).json({ message: "post not found" });
+  }
+});
+
+app.patch("/posts/:id", (req, res) => {
+  const post = posts.find((item) => String(item.id) === req.params.id);
+  if (post) {
+    if (req.body.userId || req.body.title || req.body.body) {
+      post.body = req.body.body || post.body;
+      post.title = req.body.title || post.title;
+      post.userId = req.body.userId || post.userId;
+      res.json(post);
+    } else {
+      res.status(400).json({ message: "missing fields" });
+    }
+  } else {
+    res.status(404).json({ message: "post not found" });
+  }
+});
+
+app.get("/comments", (req, res) => {
+  res.json(comments);
+});
+
+app.get("/comments/:id", (req, res) => {
+  const comment = comments.find((item) => String(item.id) === req.params.id);
+  comment
+    ? res.json(comments)
+    : res.status(400).json({ message: "comment not found" });
+});
+
+app.get("/albums", (req, res) => {
+  res.json(albums);
+});
+
+app.get("/albums/:id", (req, res) => {
+  const album = albums.find((item) => String(item.id) === req.params.id);
+  album
+    ? res.json(album)
+    : res.status(400).json({ message: "album not found" });
+});
+
+app.get("/photos", (req, res) => {
+  const skip = Number(req.query.skip) || 0;
+  const limit = Number(req.query.limit) || 20;
+  let subPhotos = photos.filter((_, index) => index >= skip);
+  subPhotos = subPhotos.filter((_, index) => index < limit);
+  res.json(subPhotos);
+});
+
+app.get("/photos/:id", (req, res) => {
+  const photo = photos.find((item) => String(item.id) === req.params.id);
+  photo
+    ? res.json(photo)
+    : res.status(400).json({ message: "photo not found" });
+});
+
+app.listen(3000, () => console.log("Server is running"));
