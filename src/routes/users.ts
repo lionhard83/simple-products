@@ -28,11 +28,11 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", async ({ body: { name, surname, age } }, res) => {
   const user = await User.create({
-    name: req.body.name,
-    surname: req.body.surname,
-    age: req.body.age,
+    name,
+    surname,
+    age,
   });
   const userSaved = await user.save();
   res.status(201).json(userSaved);

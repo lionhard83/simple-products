@@ -8,14 +8,13 @@ const users = [
 // request
 // response
 // users?name=Car
-app.get("/users", (req, res) => {
-  console.log(req.query);
+app.get("/users", ({ query: { name } }, res) => {
+  console.log(name);
   res.json(users);
 });
 
-app.get("/users/:id", (req, res) => {
-  const id = req.params.id;
-  const user = users.find((item) => String(item.id) === id);
+app.get("/users/:id", ({ params: { id } }, res) => {
+  const user = users.find(({ id: userId }) => String(userId) === id);
   res.json(user);
 });
 

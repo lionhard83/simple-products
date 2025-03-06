@@ -22,21 +22,21 @@ router.get("/", callbackGuard, (req, res) => {
   res.json(copyPosts);
 });
 
-router.get("/:id", callbackGuard, (req, res) => {
-  const post = posts.find((item) => String(item.id) === req.params.id);
+router.get("/:id", callbackGuard, ({ params: { id } }, res) => {
+  const post = posts.find(({ id: postId }) => String(postId) === id);
   post ? res.json(post) : res.status(400).json({ message: "post not found" });
 });
 
-router.post("/", callbackGuard, (req, res) => {
-  if (req.body.userId && req.body.title && req.body.body) {
+router.post("/", callbackGuard, ({ body: { userId, title, body } }, res) => {
+  if (userId && title && body) {
     const array = posts.map((item) => item.id);
-    const newId = Math.max(...array) + 1;
+    const id = Math.max(...array) + 1;
 
     const newPost = {
-      title: req.body.title,
-      body: req.body.body,
-      userId: req.body.userId,
-      id: newId,
+      title,
+      body,
+      userId,
+      id,
     };
     posts.push(newPost);
     res.status(201).json(newPost);
