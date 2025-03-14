@@ -6,9 +6,12 @@ import postsRouter from "./routes/posts";
 import usersRouter from "./routes/users";
 import authRouter from "./routes/auth";
 import mongoose from "mongoose";
+import "dotenv/config";
 
 export const app = express();
 app.use(express.json());
+
+console.log(process.env);
 
 app.use("/auth", authRouter);
 

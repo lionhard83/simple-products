@@ -23,3 +23,15 @@ export const callbackGuard = async (
   res.locals.user = user;
   next();
 };
+
+export const handleExpressValidatorError = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!validationResult(req).isEmpty()) {
+    res.status(400).json({ errors: validationResult(req).array() });
+    return;
+  }
+  next();
+};

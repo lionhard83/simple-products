@@ -1,15 +1,9 @@
 import express, { Request, Response } from "express";
 import { User } from "../models/User";
-import {
-  body,
-  param,
-  matchedData,
-  header,
-  validationResult,
-} from "express-validator";
+import { body, param, matchedData } from "express-validator";
 import { v4 } from "uuid";
 import bcrypt from "bcrypt";
-import { callbackGuard } from "../middleware/auth";
+import { callbackGuard, handleExpressValidatorError } from "../middleware/auth";
 const SALT = 10;
 
 const router = express.Router();
@@ -18,11 +12,8 @@ router.post(
   "/signup",
   body("email").trim().isEmail(),
   body("password").isStrongPassword(),
+  handleExpressValidatorError,
   async (req: Request, res: Response) => {
-    if (!validationResult(req).isEmpty()) {
-      res.status(400).json({ errors: validationResult(req).array() });
-      return;
-    }
     const { email, password } = matchedData(req);
     try {
       await User.create({
@@ -30,6 +21,7 @@ router.post(
         password: await bcrypt.hash(password, SALT),
         validateEmailToken: v4(),
       });
+      // MANDA LA MAIL
       res.status(201).json({ message: "User created" });
     } catch (err) {
       res.status(409).json({ message: err });
@@ -40,11 +32,8 @@ router.post(
 router.get(
   "/validate/:validateToken",
   param("validateToken").isUUID(),
+  handleExpressValidatorError,
   async (req: Request, res: Response) => {
-    if (!validationResult(req).isEmpty()) {
-      res.status(400).json({ errors: validationResult(req).array() });
-      return;
-    }
     const user = await User.findOneAndUpdate(
       { validateEmailToken: req.params.validateToken },
       {
@@ -65,11 +54,8 @@ router.post(
   "/login",
   body("email").trim().isEmail(),
   body("password").isStrongPassword(),
+  handleExpressValidatorError,
   async (req: Request, res: Response) => {
-    if (!validationResult(req).isEmpty()) {
-      res.status(400).json({ errors: validationResult(req).array() });
-      return;
-    }
     const { email, password } = matchedData(req);
     const user = await User.findOne({ email });
     if (!user || (await !bcrypt.compare(password, user.password))) {
@@ -77,6 +63,49 @@ router.post(
       return;
     }
     res.json({ accessToken: user.accessToken });
+  }
+);
+
+router.post(
+  "/auth/request-reset-password",
+  body("email").trim().isEmail(),
+  handleExpressValidatorError,
+  async (req: Request, res: Response) => {
+    const { email } = matchedData(req);
+    const user = await User.findOneAndUpdate(
+      { email },
+      { validateEmailToken: v4() }
+    );
+    if (!user) {
+      res.status(404).json({ message: "user not found" });
+      return;
+    }
+    // INVIO MAIL
+    res.json({ message: "request send" });
+  }
+);
+
+router.patch(
+  "/confirm-reset-password/:validateEmailToken",
+  param("validateEmailToken").isUUID(),
+  body("password").isStrongPassword(),
+  handleExpressValidatorError,
+  async (
+    { params: { validateEmailToken }, body: { password } }: Request,
+    res: Response
+  ) => {
+    const user = await User.findOneAndUpdate(
+      { validateEmailToken },
+      {
+        password: await bcrypt.hash(password, SALT),
+        validateEmailToken: undefined,
+      }
+    );
+    if (!user) {
+      res.status(404).json({ message: "Invalid token" });
+      return;
+    }
+    res.json({ message: "password has been updated" });
   }
 );
 
