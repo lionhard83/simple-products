@@ -4,7 +4,7 @@ import { app } from "../app";
 import { User } from "../models/User";
 
 const email = "carlo@gmail.com";
-const password = "1234567";
+const password = "A12c!34@D567!!";
 
 describe("status", () => {
   it("server is running", async () => {
@@ -20,11 +20,10 @@ describe("signup/validate/login/me", () => {
     await User.findOneAndDelete({ email });
   });
   it("auth process", async () => {
-    const { status: status1 } = await request(app)
+    const { status: status1, body } = await request(app)
       .post("/auth/signup")
       .send({ email, password });
     assert.equal(status1, 201);
-
     const user = await User.findOne({ email });
     const { status: status2 } = await request(app).get(
       `/auth/validate/${user!.validateEmailToken}`
@@ -48,7 +47,6 @@ describe("signup/validate/login/me", () => {
 });
 
 describe("signup/user already present", () => {
-  const email = "carlo@gmail.com";
   before("create an user", async () => {
     await User.create({ email, password, emailIsActive: true });
   });

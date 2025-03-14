@@ -2,7 +2,15 @@ import mongoose from "mongoose";
 
 const Schema = mongoose.Schema;
 
-const UserSchema = new Schema({
+type User = {
+  email: string;
+  password: string;
+  validateEmailToken?: string;
+  emailIsActive: boolean;
+  accessToken?: boolean;
+};
+
+const UserSchema = new Schema<User>({
   email: { type: String, require: true, unique: true },
   password: { type: String, require: true },
   validateEmailToken: { type: String },
