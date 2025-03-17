@@ -20,7 +20,7 @@ describe("signup/validate/login/me", () => {
     await User.findOneAndDelete({ email });
   });
   it("auth process", async () => {
-    const { status: status1, body } = await request(app)
+    const { status: status1 } = await request(app)
       .post("/auth/signup")
       .send({ email, password });
     assert.equal(status1, 201);
