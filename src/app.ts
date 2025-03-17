@@ -1,9 +1,5 @@
-import express, { Request, Response, NextFunction } from "express";
+import express from "express";
 import albumsRouter from "./routes/albums";
-import photosRouter from "./routes/photos";
-import commentsRouter from "./routes/comments";
-import postsRouter from "./routes/posts";
-import usersRouter from "./routes/users";
 import authRouter from "./routes/auth";
 import mongoose from "mongoose";
 import "dotenv/config";
