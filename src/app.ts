@@ -11,8 +11,6 @@ import "dotenv/config";
 export const app = express();
 app.use(express.json());
 
-console.log(process.env);
-
 app.use("/auth", authRouter);
 
 app.use("/albums", albumsRouter); // delega di gestione url a sottofile o sottoRouter

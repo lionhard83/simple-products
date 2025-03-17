@@ -7,7 +7,6 @@ type User = {
   password: string;
   validateEmailToken?: string;
   emailIsActive: boolean;
-  accessToken?: boolean;
 };
 
 const UserSchema = new Schema<User>({
@@ -15,7 +14,6 @@ const UserSchema = new Schema<User>({
   password: { type: String, require: true },
   validateEmailToken: { type: String },
   emailIsActive: { type: Boolean, default: false },
-  accessToken: { type: String },
 }); // i dati in entrata avranno questa forma
 
 export const User = mongoose.model("User", UserSchema); // lo schema fa riferimento alla collezione users

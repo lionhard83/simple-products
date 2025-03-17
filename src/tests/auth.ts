@@ -39,7 +39,7 @@ describe("signup/validate/login/me", () => {
 
     const { status: status4, body: body2 } = await request(app)
       .get("/auth/me")
-      .set("authorization", accessToken);
+      .set("authorization", `Bearer ${accessToken}`);
     assert.equal(status4, 200);
     assert.equal("_id" in body2, true);
     assert.equal(body2.email, email);
@@ -93,7 +93,7 @@ describe("Auth Tests", () => {
 
     const { status: status4, body: body2 } = await request(app)
       .get("/auth/me")
-      .set("Authorization", accessToken);
+      .set("Authorization", `Bearer ${accessToken}`);
     assert.equal(status4, 200);
     assert.exists(body2._id in body2, "User ID should exist");
     assert.equal(body2.email, email);

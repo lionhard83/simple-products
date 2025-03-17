@@ -3,6 +3,7 @@ import { User } from "../models/User";
 import { body, param, matchedData } from "express-validator";
 import { v4 } from "uuid";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import { callbackGuard, handleExpressValidatorError } from "../middleware/auth";
 const SALT = 10;
 
@@ -39,7 +40,6 @@ router.get(
       {
         emailIsActive: true,
         validateEmailToken: undefined,
-        accessToken: v4(),
       }
     );
     if (!user) {
@@ -57,12 +57,21 @@ router.post(
   handleExpressValidatorError,
   async (req: Request, res: Response) => {
     const { email, password } = matchedData(req);
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("email _id");
     if (!user || (await !bcrypt.compare(password, user.password))) {
       res.status(401).json({ message: "invalid credentials" });
       return;
     }
-    res.json({ accessToken: user.accessToken });
+    try {
+      res.json({
+        accessToken: jwt.sign(
+          { user },
+          process.env.MY_SECRET_JWT_KEY as string
+        ),
+      });
+    } catch (err) {
+      console.log(err);
+    }
   }
 );
 
@@ -80,7 +89,10 @@ router.post(
       res.status(404).json({ message: "user not found" });
       return;
     }
-    // INVIO MAIL
+    if (process.env.current !== "test") {
+      // INVIO MAIL
+    }
+
     res.json({ message: "request send" });
   }
 );
@@ -109,7 +121,7 @@ router.patch(
   }
 );
 
-router.get("/me", callbackGuard, async (_: Request, res: Response) => {
+router.get("/me", callbackGuard, (_: Request, res: Response) => {
   res.json(res.locals.user);
 });
 
